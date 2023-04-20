@@ -1,0 +1,52 @@
+{
+  "homeserver": "https://matrix.org",
+  "user_id": "@somebotuser:matrix.org",
+  "access_token": "ACCESS_TOKEN",
+  "global_check_interval": 60,
+  "users": [
+    {
+      "name": "User1",
+      "matrix_room_id": "!internalID:matrix.org",
+      "checkers": [
+        {
+          "checker_type": "discourse",
+          "forums": [
+            {
+              "name": "Forum1",
+              "discourse_url": "https://forum.some-discourse.com",
+              "discourse_api_key": "",
+              "discourse_api_user": "botuser",
+              "keywords": ["test", "test"]
+            }
+          ]
+        },
+        {
+          "checker_type": "governance",
+          "substrate_wss": "wss://kusama-rpc.polkadot.io",
+          "network": "kusama",
+	  "keywords": ["staking"]
+	  
+        }
+      ]
+    },
+    {
+      "name": "User2",
+      "matrix_room_id": "MATRIX_ROOM_ID_2",
+      "checkers": [
+        {
+          "checker_type": "discourse",
+          "forums": [
+            {
+              "name": "Forum2",
+              "discourse_url": "https://forum2.example.com",
+              "discourse_api_key": "API_KEY_2",
+              "discourse_api_user": "API_USER_2",
+              "keywords": ["keyword3", "keyword4"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
