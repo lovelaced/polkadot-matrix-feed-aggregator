@@ -39,7 +39,7 @@ def read_last_check(user: str, checker_type: str, logger, last_check_file: str =
             return datetime.fromisoformat(last_check_data[key])
 
     last_check = datetime.now()
-    write_last_check(user, checker_type)
+    write_last_check(user, checker_type, logger)
     logger.info(f"Initializing last check for user {user} and checker type {checker_type}.")
     return last_check
 

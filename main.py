@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from matrix_client import setup_matrix_client, handle_set_keywords
 from discourse_checker import DiscourseChecker
 from governance_checker import GovernanceChecker
+from stackexchange_checker import StackExchangeChecker
 from utils.utils import load_config, read_last_check, write_last_check
 from logger_setup import setup_logger
 
@@ -14,6 +15,7 @@ config = load_config()
 checker_classes = {
     "discourse": DiscourseChecker,
     "governance": GovernanceChecker,
+    "stackexchange": StackExchangeChecker,
 }
 
 async def main():
@@ -21,6 +23,13 @@ async def main():
     client = await setup_matrix_client(config)
     logger.info("Bot started and connected to Matrix homeserver")
 
+    # Run check_new_data() as a background task
+    asyncio.create_task(check_new_data())
+
+    # Keep the bot synchronized with the Matrix homeserver
+    await client.sync_forever(timeout=30000)  # Synchronize every 30 seconds
+
+async def check_new_data():
     while True:
         await asyncio.sleep(config["global_check_interval"])
         logger.debug("Woke up from sleep, checking for new data")
@@ -47,7 +56,7 @@ async def main():
                         logger.error(f"Unknown checker_type: {checker_type}")
         except Exception as e:
             logger.error(f"Error while checking for new data: {str(e)}")
-
+    
 if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(main())
-
+    

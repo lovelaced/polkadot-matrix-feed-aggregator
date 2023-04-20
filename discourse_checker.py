@@ -25,37 +25,42 @@ class DiscourseChecker(DataChecker):
             "Content-Type": "application/json",
         }
         data = {
-            "q": f"{keyword} after:{self.last_check.strftime('%Y-%m-%d')} in:open",
+                "q": f"{keyword} after:{self.last_check.strftime('%Y-%m-%d')} in:open OR tags:{keyword}",
         }
-
-        # Create a Request object to get the URL with parameters
+    
         req = requests.Request('GET', url, headers=headers, params=data)
         prepared_req = req.prepare()
-
-        # Print the search URL and headers
+    
         self.logger.debug(f"Search URL: {prepared_req.url}")
-
+    
         response = requests.get(url, headers=headers, params=data)
         if response.status_code == 200:
             results = response.json()
             posts = results["posts"]
             self.logger.debug(f"Posts: {posts}")
-
+    
             if posts:
                 self.logger.debug(f"Found {len(posts)} new posts with keyword: {keyword}")
                 for post in posts:
                     post_abstract = post['blurb'][:250] + "..." if len(post['blurb']) > 250 else post['blurb']
                     post_link = f"{self.discourse_url}/t/{post['topic_id']}/{post['post_number']}"
                     formatted_message = f"<strong>{post['username']}</strong> - {post_abstract}<br><a href='{post_link}'>Read more</a>"
-                    await self.client.room_send(
-                        self.matrix_room_id,
-                        "m.room.message",
-                        {
-                            "msgtype": "m.text",
-                            "format": "org.matrix.custom.html",
-                            "formatted_body": formatted_message,
-                            "body": f"{post['username']} - {post_abstract}\n{post_link}"
-                        }
-                    )
+                    self.logger.debug(f"Sending post to Matrix room: {formatted_message}")
+    
+                    try:
+                        response = await self.client.room_send(
+                            self.matrix_room_id,
+                            "m.room.message",
+                            {
+                                "msgtype": "m.text",
+                                "format": "org.matrix.custom.html",
+                                "formatted_body": formatted_message,
+                                "body": f"{post['username']} - {post_abstract}\n{post_link}"
+                            }
+                        )
+                        self.logger.debug(f"Matrix room_send response: {response}")
+                    except Exception as e:
+                        self.logger.error(f"Failed to send message to Matrix room: {str(e)}")
         else:
             self.logger.error("Failed to fetch search results from Discourse.")
+    

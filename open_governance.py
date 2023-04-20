@@ -3,20 +3,19 @@ import json
 import requests
 import os
 import logging
-from typing import Union, Any
-from utils.data_processing import CacheManager
+from typing import Union, Any, List, Dict
 from substrateinterface import SubstrateInterface
+from datetime import datetime
 
 
 class OpenGovernance2:
     def __init__(self, substrate_wss, network, logger):
-        self.util = CacheManager
+        self.network = network
         self.substrate = SubstrateInterface(
             url=substrate_wss,
             ss58_format=2,
-            type_registry_preset='kusama'
+            type_registry_preset=self.network
         )
-        self.network = network
         self.logger = logger
         self.logger.debug("OpenGovernance2 initialized")
 
@@ -48,66 +47,82 @@ class OpenGovernance2:
                     referendum.update({int(index.value): info.value})
 
             sort = json.dumps(referendum, sort_keys=True)
+            self.logger.debug("Some data here: %s", sort)
             data = json.loads(sort)
 
-            #self.logger.debug("All ongoing referendums info: %s", data)
             return data
 
-    def fetch_referendum_data(self, referendum_id: int, network: str) -> Union[str, Any]:
-        """
-        Fetch the on-chain and Polkassembly data of a referendum using its ID.
-
-        :param referendum_id: ID of the referendum
-        :param network: Network name (e.g., 'kusama')
-        :return: Dictionary containing the referendum data, or an error message if the data could not be retrieved
-        """
-        self.logger.debug("Fetching referendum data for ID: %s, network: %s", referendum_id, network)
-        
-        urls = [
-            f"https://api.polkassembly.io/api/v1/posts/on-chain-post?postId={referendum_id}&proposalType=referendums_v2",
-            f"https://kusama.subsquare.io/api/gov2/referendums/{referendum_id}",
-        ]
-
-        headers = {"x-network": network}
-        successful_response = None
-        successful_url = None
-
-        for url in urls:
-            self.logger.debug("Trying URL: %s", url)
+    def fetch_all_referendum_data(self, network: str, last_check: datetime) -> List[Dict[str, Any]]:
+        page = 1
+        page_size = 100
+        all_referenda = []
+    
+        while True:
+            url = f"https://{self.network}.subsquare.io/api/gov2/referendums?page={page}&pageSize={page_size}"
+            headers = {"x-network": network}
+    
             try:
                 response = requests.get(url, headers=headers)
                 response.raise_for_status()
                 json_response = response.json()
-                self.logger.debug("Received response from URL: %s, response: %s", url, json_response)
-
-                if "title" not in json_response.keys():
-                    json_response["title"] = "None"
-
-                if json_response["title"] is None:
-                    return {"title": "None",
-                            "content": "Unable to retrieve details from both sources",
-                            "successful_url": None}
-
-                if successful_response is None:
-                    successful_response = json_response
-                    successful_url = url
-
+                referenda = json_response["items"]
+                total = json_response["total"]
+    
+                if not referenda:
+                    break
+    
+                for referendum in referenda:
+                    #self.logger.debug("JSON response: %s", json.dumps(referendum, indent=2))
+                    created_at = datetime.strptime(referendum['createdAt'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    if created_at < last_check:
+                        return all_referenda
+    
+                    index = str(referendum["referendumIndex"])
+                    polkassembly_url = f"https://api.polkassembly.io/api/v1/posts/on-chain-post?postId={index}&proposalType=referendums_v2"
+                    polkassembly_info = self.fetch_referendum_data(referendum_id=index, network=self.network, url=polkassembly_url)
+    
+                    if polkassembly_info:
+                        referendum.update(polkassembly_info)
+    
+                    all_referenda.append(referendum)
+    
+                if len(all_referenda) >= total:
+                    break
+    
+                page += 1
+    
             except requests.exceptions.HTTPError as http_error:
                 self.logger.error("HTTP exception occurred: %s", http_error)
-                raise f"HTTP exception occurred: {http_error}"
+                raise Exception(f"HTTP exception occurred: {http_error}")
+    
+        return all_referenda
 
-        if successful_response is not None and successful_response["title"] == "None":
-            return {"title": "None",
-                    "content": "Unable to retrieve details from both sources",
-                    "successful_url": None}
-        else:
-            successful_response["successful_url"] = successful_url
-            self.logger.debug("Returning successful response: %s", successful_response)
-            return successful_response
-
+    def fetch_referendum_data(self, referendum_id: int, network: str, url: str) -> Union[str, Any]:
+        self.logger.debug("Fetching referendum data for ID: %s, network: %s", referendum_id, network)
+    
+        headers = {"x-network": network}
+    
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            json_response = response.json()
+    
+            if "title" not in json_response.keys():
+                json_response["title"] = "None"
+    
+            if json_response["title"] is None:
+                return {"title": "None",
+                        "content": "Unable to retrieve details from both sources"}
+    
+            return json_response
+    
+        except requests.exceptions.HTTPError as http_error:
+            self.logger.error("HTTP exception occurred: %s", http_error)
+            raise f"HTTP exception occurred: {http_error}"
+    
     def time_until_block(self, target_block: int) -> int:
         """
-        Calculate the estimated time in minutes until the specified target block is reached on the Kusama network.
+        Calculate the estimated time in minutes until the specified target block is reached on the network.
 
         Args:
             target_block (int): The target block number for which the remaining time needs to be calculated.
@@ -129,7 +144,7 @@ class OpenGovernance2:
             # Calculate the difference in blocks
             block_difference = target_block - current_block
     
-            # Get the average block time (6 seconds for Kusama)
+            # Get the average block time (6 seconds)
             avg_block_time = 6
     
             # Calculate the remaining time in seconds
@@ -143,64 +158,45 @@ class OpenGovernance2:
         except Exception as error:
             print(f"An error occurred while trying to calculate the remaining time until {target_block} is met... {error}")
 
-    def search_keywords(text, keywords):
+    def search_keywords(self, text, keywords):
         self.logger.debug("Checking referendums for keywords: %s", keywords)
+        for keyword in keywords:
+            if keyword.lower() in text.lower():
+                return keyword
+        return None
+
         return any(keyword.lower() in text.lower() for keyword in keywords)
 
-    def check_referendums(self, keywords):
-        """
-        Check the referendums and return any new referendums containing specific keywords as a JSON string.
-
-        The method retrieves the information about referendums using the `referendumInfoFor` method and
-        caches the result using the `cache_difference` method from the `util` attribute of the `self` object.
-
-        If there are any new referendums, the method retrieves the on-chain and polkassembly information about
-        each new referendum and adds it to a dictionary. The dictionary is then filtered by the keywords and
-        returned as a JSON string.
-
-        Returns:
-            str: The new referendums containing specific keywords as a JSON string or False if there are no new referendums.
-        """
+    def check_referendums(self, keywords, last_check):
+        all_referenda = self.fetch_all_referendum_data(network=self.network, last_check=last_check)
         new_referenda = {}
+    
+        for referendum in all_referenda:
+            index = str(referendum["referendumIndex"])
+            created_at = datetime.strptime(referendum.get('createdAt', ''), "%Y-%m-%dT%H:%M:%S.%fZ")
+            self.logger.debug("Referendum created at: %s", created_at)
+    
+            if created_at > last_check:
+                self.logger.debug("Found a new referendum")
+                new_referenda[index] = referendum
+            else:
+                self.logger.debug("Referendum is not new: %s is older than %s", created_at, last_check)
 
-        referendum_info = self.referendumInfoFor()
-
-        #self.logger.debug("Referendum Info: %s", json.dumps(referendum_info, indent=2))
-
-        cache_file_path = os.path.join(os.path.dirname(__file__), 'data', 'governance.cache')
-
-        results = self.util.get_cache_difference(filename=cache_file_path, data=referendum_info)
-        self.util.save_data_to_cache(filename=cache_file_path, data=referendum_info)
-        self.logger.debug("Received results")
-
-        if results:
-            self.logger.debug("New referendums found: %s", json.dumps(results, indent=2))
-            for key, value in results.items():
-                if 'added' in key:
-                    for index in results['dictionary_item_added']:
-                        index = index.strip('root').replace("['", "").replace("']", "")
-                        onchain_info = referendum_info[index]['Ongoing']
-                        polkassembly_info = self.fetch_referendum_data(referendum_id=index, network=config['network'])
-                        self.logger.debug("Polkassembly info: %s, index: %s, onchain info: %s", polkassembly_info, index, onchain_info)
-
-                        new_referenda.update({
-                            f"{index}": polkassembly_info
-                        })
-
-                        new_referenda[index]['onchain'] = onchain_info
-
-            #self.logger.debug("New referendums with details: %s", json.dumps(new_referenda, indent=2))
-
-            # Filter the new referendums based on the keywords
-            filtered_referenda = {}
-            for index, referendum_data in new_referenda.items():
-                title = referendum_data.get('title', '')
-                content = referendum_data.get('content', '')
-
-                if self.search_keywords(title, keywords) or self.search_keywords(content, keywords):
-                    filtered_referenda[index] = referendum_data
-
-            self.logger.debug("Filtered referendums based on keywords: %s", json.dumps(filtered_referenda, indent=2))
-            return filtered_referenda
-
-        return {} 
+        filtered_referenda = {} 
+        for index, referendum_data in new_referenda.items():
+            title = referendum_data.get('title', '')
+            content = referendum_data.get('content', '')
+        
+            title_match = self.search_keywords(title, keywords)
+            content_match = self.search_keywords(content, keywords)
+        
+            if title_match or content_match:
+                matched_keyword = title_match or content_match
+                successful_url = f"https://{self.network}.subsquare.io/referenda/referendum/{index}"
+                referendum_data["successful_url"] = successful_url
+                referendum_data["matched_keyword"] = matched_keyword
+                referendum_data["content"] = content
+                filtered_referenda[index] = referendum_data
+    
+        return filtered_referenda
+    

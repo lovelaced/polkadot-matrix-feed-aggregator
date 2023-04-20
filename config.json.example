@@ -26,6 +26,12 @@
           "network": "kusama",
 	  "keywords": ["staking"]
 	  
+        },
+        {
+          "checker_type": "stackexchange",
+          "stack_exchange_site": "stackoverflow",
+          "stack_exchange_api_key": "STACK_EXCHANGE_API_KEY",
+          "keywords": ["python", "blockchain"]
         }
       ]
     },
