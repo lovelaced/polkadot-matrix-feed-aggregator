@@ -1,6 +1,4 @@
 import asyncio
-from dotenv import load_dotenv
-
 from matrix_client import setup_matrix_client, handle_set_keywords
 from discourse_checker import DiscourseChecker
 from governance_checker import GovernanceChecker
