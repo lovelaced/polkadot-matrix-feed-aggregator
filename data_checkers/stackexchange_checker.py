@@ -38,7 +38,7 @@ class StackExchangeChecker(DataChecker):
                     post_abstract = post['title'][:250] + "..." if len(post['title']) > 250 else post['title']
                     post_link = post['link']
                     formatted_message = f"🔍 <strong>Stack Exchange ({keyword})</strong><br><strong>{post['owner']['display_name']}</strong> - {post_abstract}<br><a href='{post_link}'>Read more</a>"
-                    self.logger.debug(f"Sending post to Matrix room: {formatted_message}")
+                    self.logger.debug(f"Sending SE post to Matrix room: {post_link}")
 
                     try:
                         response = await self.client.room_send(
@@ -51,7 +51,7 @@ class StackExchangeChecker(DataChecker):
                                 "body": f"{post['owner']['display_name']} - {post_abstract}\n{post_link}"
                             }
                         )
-                        self.logger.debug(f"Matrix room_send response: {response}")
+                        #self.logger.debug(f"Matrix room_send response: {response}")
                     except Exception as e:
                         self.logger.error(f"Failed to send message to Matrix room: {str(e)}")
         else:

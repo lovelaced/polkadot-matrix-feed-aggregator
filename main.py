@@ -46,6 +46,9 @@ async def check_new_data():
                             for forum_config in checker_config["forums"]:
                                 checker = checker_class(client, matrix_room_id, forum_config, logger, last_check)
                                 await checker.check_new_data()
+                        elif checker_type == "governance":
+                            checker = checker_class(client, matrix_room_id, checker_config, logger, last_check)
+                            await checker.check_new_data()
                         else:
                             checker = checker_class(client, matrix_room_id, checker_config, logger, last_check)
                             await checker.check_new_data()

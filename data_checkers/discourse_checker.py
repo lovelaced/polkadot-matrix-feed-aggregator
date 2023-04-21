@@ -47,7 +47,7 @@ class DiscourseChecker(DataChecker):
                     post_abstract = post['blurb'][:250] + "..." if len(post['blurb']) > 250 else post['blurb']
                     post_link = f"{self.discourse_url}/t/{post['topic_id']}/{post['post_number']}"
                     formatted_message = f"🔍 <strong>Discourse ({self.discourse_url}, {keyword})</strong><br><strong>{post['username']}</strong> - {post_abstract}<br><a href='{post_link}'>Read more</a>"
-                    self.logger.debug(f"Sending post to Matrix room: {formatted_message}")
+                    self.logger.debug(f"Sending post to Matrix room: {post_link}")
     
                     try:
                         response = await self.client.room_send(
@@ -60,7 +60,7 @@ class DiscourseChecker(DataChecker):
                                 "body": f"{post['username']} - {post_abstract}\n{post_link}"
                             }
                         )
-                        self.logger.debug(f"Matrix room_send response: {response}")
+                        #self.logger.debug(f"Matrix room_send response: {response}")
                     except Exception as e:
                         self.logger.error(f"Failed to send message to Matrix room: {str(e)}")
         else:

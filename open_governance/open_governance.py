@@ -65,6 +65,7 @@ class OpenGovernance2:
                 response = requests.get(url, headers=headers)
                 response.raise_for_status()
                 json_response = response.json()
+                self.logger.debug("Trying to get info from %s", url)
                 referenda = json_response["items"]
                 total = json_response["total"]
     
@@ -159,7 +160,6 @@ class OpenGovernance2:
             print(f"An error occurred while trying to calculate the remaining time until {target_block} is met... {error}")
 
     def search_keywords(self, text, keywords):
-        self.logger.debug("Checking referendums for keywords: %s", keywords)
         for keyword in keywords:
             if keyword.lower() in text.lower():
                 return keyword
@@ -174,7 +174,7 @@ class OpenGovernance2:
         for referendum in all_referenda:
             index = str(referendum["referendumIndex"])
             created_at = datetime.strptime(referendum.get('createdAt', ''), "%Y-%m-%dT%H:%M:%S.%fZ")
-            self.logger.debug("Referendum created at: %s", created_at)
+            #self.logger.debug("Referendum created at: %s", created_at)
     
             if created_at > last_check:
                 self.logger.debug("Found a new referendum")
@@ -182,6 +182,7 @@ class OpenGovernance2:
             else:
                 self.logger.debug("Referendum is not new: %s is older than %s", created_at, last_check)
 
+        self.logger.debug("Checking %s referendums for keywords: %s", len(new_referenda.keys()), keywords)
         filtered_referenda = {} 
         for index, referendum_data in new_referenda.items():
             title = referendum_data.get('title', '')
