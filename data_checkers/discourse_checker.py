@@ -1,6 +1,8 @@
+# data_checkers/discourse_checker.py
+
 import requests
 from datetime import datetime
-from data_checker import DataChecker
+from data_checkers import DataChecker
 
 class DiscourseChecker(DataChecker):
     def __init__(self, client, matrix_room_id, checker_config, logger, last_check):
@@ -25,7 +27,7 @@ class DiscourseChecker(DataChecker):
             "Content-Type": "application/json",
         }
         data = {
-                "q": f"{keyword} after:{self.last_check.strftime('%Y-%m-%d')} in:open OR tags:{keyword}",
+                "q": f"{keyword} after:{self.last_check.strftime('%Y-%m-%d')} in:open",
         }
     
         req = requests.Request('GET', url, headers=headers, params=data)
@@ -44,7 +46,7 @@ class DiscourseChecker(DataChecker):
                 for post in posts:
                     post_abstract = post['blurb'][:250] + "..." if len(post['blurb']) > 250 else post['blurb']
                     post_link = f"{self.discourse_url}/t/{post['topic_id']}/{post['post_number']}"
-                    formatted_message = f"<strong>{post['username']}</strong> - {post_abstract}<br><a href='{post_link}'>Read more</a>"
+                    formatted_message = f"🔍 <strong>Discourse ({self.discourse_url}, {keyword})</strong><br><strong>{post['username']}</strong> - {post_abstract}<br><a href='{post_link}'>Read more</a>"
                     self.logger.debug(f"Sending post to Matrix room: {formatted_message}")
     
                     try:

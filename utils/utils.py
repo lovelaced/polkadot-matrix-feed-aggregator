@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict
 from typing import Optional
 
-def load_config(config_file: str = "config.json") -> Dict:
+def load_config(config_file: str = "config/config.json") -> Dict:
     """
     Load the configuration file as a dictionary.
 

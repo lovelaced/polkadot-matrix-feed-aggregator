@@ -1,6 +1,6 @@
 # stack_exchange_checker.py
 import requests
-from data_checker import DataChecker
+from data_checkers import DataChecker
 
 class StackExchangeChecker(DataChecker):
     def __init__(self, client, matrix_room_id, checker_config, logger, last_check):
@@ -37,7 +37,7 @@ class StackExchangeChecker(DataChecker):
                 for post in posts:
                     post_abstract = post['title'][:250] + "..." if len(post['title']) > 250 else post['title']
                     post_link = post['link']
-                    formatted_message = f"<strong>{post['owner']['display_name']}</strong> - {post_abstract}<br><a href='{post_link}'>Read more</a>"
+                    formatted_message = f"🔍 <strong>Stack Exchange ({keyword})</strong><br><strong>{post['owner']['display_name']}</strong> - {post_abstract}<br><a href='{post_link}'>Read more</a>"
                     self.logger.debug(f"Sending post to Matrix room: {formatted_message}")
 
                     try:

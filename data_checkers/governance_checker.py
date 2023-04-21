@@ -1,5 +1,5 @@
-from open_governance import OpenGovernance2
-from data_checker import DataChecker
+from open_governance.open_governance import OpenGovernance2
+from data_checkers import DataChecker
 import markdown
 
 class GovernanceChecker(DataChecker):

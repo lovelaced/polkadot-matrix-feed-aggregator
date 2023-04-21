@@ -1,10 +1,10 @@
 import asyncio
-from matrix_client import setup_matrix_client, handle_set_keywords
-from discourse_checker import DiscourseChecker
-from governance_checker import GovernanceChecker
-from stackexchange_checker import StackExchangeChecker
+from matrix.matrix_client import setup_matrix_client, handle_set_keywords
+from data_checkers.discourse_checker import DiscourseChecker
+from data_checkers.governance_checker import GovernanceChecker
+from data_checkers.stackexchange_checker import StackExchangeChecker
 from utils.utils import load_config, read_last_check, write_last_check
-from logger_setup import setup_logger
+from log.logger_setup import setup_logger
 
 logger = setup_logger()
 

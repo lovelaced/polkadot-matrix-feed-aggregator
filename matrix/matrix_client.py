@@ -1,12 +1,3 @@
-#from nio import AsyncClient
-
-#class CustomMatrixClient(AsyncClient):
-#    def __init__(self, homeserver, user_id, access_token):
-#        super().__init__(homeserver)
-
-#        self.access_token = access_token
-#        self.user_id = user_id
-
 from nio import AsyncClient, RoomMessageText
 
 async def setup_matrix_client(config):

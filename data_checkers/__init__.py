@@ -1,3 +1,5 @@
+# data_checkers/__init__.py
+
 class DataChecker:
     def __init__(self, client, matrix_room_id, checker_config, logger):
         self.client = client
