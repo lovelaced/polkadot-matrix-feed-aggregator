@@ -4,6 +4,4 @@ asyncio==3.4.3
 pyyaml==6.0
 substrate-interface==1.1.2
 requests==2.26.0
-python-dotenv==0.19.2
-
 
