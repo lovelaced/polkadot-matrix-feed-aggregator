@@ -1,0 +1,39 @@
+name: Polkadot Feed Aggregator
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Run the workflow every hour
+
+jobs:
+  run_checker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Cache last_check data
+      uses: actions/cache@v2
+      id: cache-last-check
+      with:
+        path: data/last_check.json
+        key: ${{ runner.os }}-last-check-data
+
+    - name: Run Feed Checks
+      run: python main.py
+      env:
+        MATRIX_ACCESS_TOKEN: ${{ secrets.MATRIX_ACCESS_TOKEN }}
+        DISCOURSE_FORUM1_API_KEY: ${{ secrets.DISCOURSE_FORUM1_API_KEY }}
+        DISCOURSE_FORUM2_API_KEY: ${{ secrets.DISCOURSE_FORUM2_API_KEY }}
+        STACK_EXCHANGE_API_KEY: ${{ secrets.STACK_EXCHANGE_API_KEY }}
+
