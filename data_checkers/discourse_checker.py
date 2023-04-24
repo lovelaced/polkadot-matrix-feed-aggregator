@@ -39,7 +39,7 @@ class DiscourseChecker(DataChecker):
         if response.status_code == 200:
             results = response.json()
             posts = results["posts"]
-            self.logger.debug(f"Posts: {posts}")
+            #self.logger.debug(f"Posts: {posts}")
     
             if posts:
                 self.logger.debug(f"Found {len(posts)} new posts with keyword: {keyword}")

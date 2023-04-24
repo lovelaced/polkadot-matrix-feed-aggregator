@@ -81,6 +81,7 @@ class OpenGovernance2:
                     index = str(referendum["referendumIndex"])
                     polkassembly_url = f"https://api.polkassembly.io/api/v1/posts/on-chain-post?postId={index}&proposalType=referendums_v2"
                     polkassembly_info = self.fetch_referendum_data(referendum_id=index, network=self.network, url=polkassembly_url)
+                    self.logger.debug("Polkassembly info: %s", json.dumps(polkassembly_info, indent=2))
     
                     if polkassembly_info:
                         referendum.update(polkassembly_info)

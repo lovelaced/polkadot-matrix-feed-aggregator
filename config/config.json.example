@@ -1,7 +1,7 @@
 {
   "homeserver": "https://matrix.org",
   "user_id": "@somebotuser:matrix.org",
-  "access_token": "ACCESS_TOKEN",
+  "access_token": "MATRIX_ACCESS_TOKEN",
   "global_check_interval": 60,
   "users": [
     {
@@ -13,8 +13,15 @@
           "forums": [
             {
               "name": "Forum1",
-              "discourse_url": "https://forum.some-discourse.com",
-              "discourse_api_key": "",
+              "discourse_url": "https://forum1.some-discourse.com",
+              "discourse_api_key": "DISCOURSE_FORUM1_API_KEY",
+              "discourse_api_user": "botuser",
+              "keywords": ["test", "test"]
+            },
+            {
+              "name": "Forum2",
+              "discourse_url": "https://forum2.some-discourse.com",
+              "discourse_api_key": "DISCOURSE_FORUM2_API_KEY",
               "discourse_api_user": "botuser",
               "keywords": ["test", "test"]
             }
@@ -43,11 +50,18 @@
           "checker_type": "discourse",
           "forums": [
             {
+              "name": "Forum1",
+              "discourse_url": "https://forum1.some-discourse.com",
+              "discourse_api_key": "DISCOURSE_FORUM1_API_KEY",
+              "discourse_api_user": "botuser",
+              "keywords": ["test", "test"]
+            },
+            {
               "name": "Forum2",
-              "discourse_url": "https://forum2.example.com",
-              "discourse_api_key": "API_KEY_2",
-              "discourse_api_user": "API_USER_2",
-              "keywords": ["keyword3", "keyword4"]
+              "discourse_url": "https://forum2.some-discourse.com",
+              "discourse_api_key": "DISCOURSE_FORUM2_API_KEY",
+              "discourse_api_user": "botuser",
+              "keywords": ["test", "test"]
             }
           ]
         }

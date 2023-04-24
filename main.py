@@ -1,4 +1,5 @@
 import asyncio
+import os
 from matrix.matrix_client import setup_matrix_client, handle_set_keywords
 from data_checkers.discourse_checker import DiscourseChecker
 from data_checkers.governance_checker import GovernanceChecker
@@ -9,6 +10,18 @@ from log.logger_setup import setup_logger
 logger = setup_logger()
 
 config = load_config()
+
+# Update the main config with the sensitive data from environment variables
+config["access_token"] = os.environ["MATRIX_ACCESS_TOKEN"]
+
+for user in config["users"]:
+    for checker in user["checkers"]:
+        if checker["checker_type"] == "discourse":
+            for forum in checker["forums"]:
+                api_key_env = forum["discourse_api_key_env"]
+                forum["discourse_api_key"] = os.environ[api_key_env]
+        elif checker["checker_type"] == "stackexchange":
+            checker["stack_exchange_api_key"] = os.environ["STACK_EXCHANGE_API_KEY"]
 
 checker_classes = {
     "discourse": DiscourseChecker,
